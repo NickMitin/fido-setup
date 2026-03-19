@@ -49,6 +49,18 @@ jobs:
           cache-from: type=registry,ref=${{ secrets.DOCKER_REGISTRY_HOST }}/fido-setup-telegram-bot:${{ env.BRANCH_NAME }}
           cache-to: type=inline
 
+      - name: Build md2fido and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: md2fido/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_REGISTRY_HOST }}/fido-setup-md2fido:${{ env.BRANCH_NAME }}
+            ${{ secrets.DOCKER_REGISTRY_HOST }}/fido-setup-md2fido:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_REGISTRY_HOST }}/fido-setup-md2fido:${{ env.BRANCH_NAME }}
+          cache-to: type=inline
+
       - name: Generate env file
         run: printf "${{ secrets[env.ENV_FILE_NAME] }}" >> .env
 
