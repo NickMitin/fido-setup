@@ -1,0 +1,86 @@
+name: Deploy to fido.nickmitn.ru
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set branch name
+        id: set_branch_name
+        run: echo BRANCH_NAME=${GITHUB_REF#refs/heads/} >> $GITHUB_ENV
+
+      - name: Set domain name
+        id: set_domain_name
+        run: echo DOMAIN_NAME="fido.nickmitn.ru" >> $GITHUB_ENV
+
+      - name: Set env file name
+        id: set_env_file_name
+        run: echo ENV_FILE_NAME="FIDO_ENV_FILE" >> $GITHUB_ENV
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY_HOST }}
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Build telegram-bot and push
+        id: docker_build_telegram_bot
+        uses: docker/build-push-action@v6
+        with:
+          context: ./telegram2fido
+          file: ./telegram2fido/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_REGISTRY_HOST }}/fido-setup-telegram-bot:${{ env.BRANCH_NAME }}
+            ${{ secrets.DOCKER_REGISTRY_HOST }}/fido-setup-telegram-bot:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_REGISTRY_HOST }}/fido-setup-telegram-bot:${{ env.BRANCH_NAME }}
+          cache-to: type=inline
+
+      - name: Generate env file
+        run: printf "${{ secrets[env.ENV_FILE_NAME] }}" >> .env
+
+      - name: Copy env file
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.DOMAIN_NAME }}
+          username: ${{ env.DOMAIN_NAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          source: ".env"
+          target: "~/${{ env.DOMAIN_NAME }}/"
+
+      - name: Rename docker-compose.deploy.yml to docker-compose.yml
+        run: mv -f docker-compose.deploy.yml docker-compose.yml
+
+      - name: Copy docker-compose.yml
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ env.DOMAIN_NAME }}
+          username: ${{ env.DOMAIN_NAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          source: "docker-compose.yml"
+          target: "~/${{ env.DOMAIN_NAME }}"
+
+      - name: Trigger container update
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ env.DOMAIN_NAME }}
+          username: ${{ env.DOMAIN_NAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd ~/${{ env.DOMAIN_NAME }}/
+            DOCKER_REGISTRY_HOST=${{ secrets.DOCKER_REGISTRY_HOST }} BRANCH_NAME=${{ env.BRANCH_NAME }} docker compose pull
+            DOCKER_REGISTRY_HOST=${{ secrets.DOCKER_REGISTRY_HOST }} BRANCH_NAME=${{ env.BRANCH_NAME }} docker compose down
+            DOCKER_REGISTRY_HOST=${{ secrets.DOCKER_REGISTRY_HOST }} BRANCH_NAME=${{ env.BRANCH_NAME }} docker compose up -d

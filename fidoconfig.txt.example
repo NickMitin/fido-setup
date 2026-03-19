@@ -1,0 +1,22 @@
+# Headless Fidian configuration template
+# Used when running fidosetup.sh --docker with predefined config
+# See: https://fidopedia.fido.de/index.php/Fidian_Setup_(Linux)
+
+YOUR_SYSTEM=FIDO-Echo 2026
+YOUR_LOCATION=City, Country
+YOUR_HOSTNAME=fido-echo
+ENABLE_TTYD=1
+WEB_PASSWORD=change_me
+
+# Link 1 (FidoNet)
+LINK_NAME_1=FidoNet
+LINK_DOMAIN_1=fidonet
+YOUR_NAME_1=Your Name
+YOUR_AKA_1=0:0/0
+UPLINK_HOST_1=uplink.example.com
+UPLINK_PORT_1=24554
+UPLINK_AKA_1=0:0/0
+SESSION_PASSWORD_1=your_password
+PACKET_PASSWORD_1=
+AREAFIX_PASSWORD_1=
+FILEFIX_PASSWORD_1=

@@ -1,0 +1,72 @@
+# FIDO Echo-Conference Setup - Deploy version
+# Uses pre-built telegram-bot image from Docker registry
+# DOCKER_REGISTRY_HOST and BRANCH_NAME are set during deploy
+
+services:
+  fido:
+    image: stimpy23/fidian:latest
+    container_name: fido-echo
+    restart: unless-stopped
+    ports:
+      - "24554:24554"   # BinkP protocol
+      - "24580:24580"   # Web console (TTYd)
+    volumes:
+      - binkd_config:/etc/binkd
+      - husky_config:/etc/husky
+      - ftn_spool:/var/spool/ftn
+      - fidian_logs:/var/log/fidian
+    command: ["/bin/sh", "-c", "mkdir -p /var/log/husky /var/log/binkd && chown -R fido:ftn /var/log/husky /var/log/binkd /var/spool/ftn && chmod -R 775 /var/log/husky /var/log/binkd /var/spool/ftn && exec /usr/bin/supervisord -n -j /run/supervisord.pid -c /etc/supervisor/supervisord.conf"]
+    environment:
+      - LINK_NAME=${LINK_NAME:-FidoNet}
+      - LINK_DOMAIN=${LINK_DOMAIN:-fidonet}
+      - YOUR_NAME=${YOUR_NAME:-Fido User}
+      - YOUR_AKA=${YOUR_AKA:-0:0/0.0}
+      - YOUR_SYSTEM=${YOUR_SYSTEM:-FIDO-Echo 2026}
+      - YOUR_LOCATION=${YOUR_LOCATION:-Local}
+      - YOUR_HOSTNAME=${YOUR_HOSTNAME:-fido-echo}
+      - UPLINK_HOST=${UPLINK_HOST}
+      - UPLINK_PORT=${UPLINK_PORT:-24554}
+      - UPLINK_AKA=${UPLINK_AKA}
+      - SESSION_PASSWORD=${SESSION_PASSWORD}
+      - LINK_NAME_1=${LINK_NAME:-FidoNet}
+      - LINK_DOMAIN_1=${LINK_DOMAIN:-fidonet}
+      - YOUR_NAME_1=${YOUR_NAME}
+      - YOUR_AKA_1=${YOUR_AKA}
+      - UPLINK_HOST_1=${UPLINK_HOST}
+      - UPLINK_PORT_1=${UPLINK_PORT:-24554}
+      - UPLINK_AKA_1=${UPLINK_AKA}
+      - SESSION_PASSWORD_1=${SESSION_PASSWORD}
+      - PACKET_PASSWORD_1=${PACKET_PASSWORD:-}
+      - AREAFIX_PASSWORD_1=${AREAFIX_PASSWORD:-}
+      - FILEFIX_PASSWORD_1=${FILEFIX_PASSWORD:-}
+      - PACKET_PASSWORD=${PACKET_PASSWORD:-}
+      - AREAFIX_PASSWORD=${AREAFIX_PASSWORD:-}
+      - FILEFIX_PASSWORD=${FILEFIX_PASSWORD:-}
+      - WEB_PASSWORD=${WEB_PASSWORD:-fidian}
+      - ENABLE_TTYD=${ENABLE_TTYD:-1}
+      - TZ=${TZ:-UTC}
+
+  telegram-bot:
+    image: ${DOCKER_REGISTRY_HOST}/fido-setup-telegram-bot:${BRANCH_NAME:-latest}
+    container_name: fido-telegram-bot
+    restart: unless-stopped
+    depends_on:
+      - fido
+    volumes:
+      - husky_config:/etc/husky:ro
+      - ftn_spool:/var/spool/ftn
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID:-}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH:-}
+      - FIDO_ECHO_AREA=${FIDO_ECHO_AREA:-NICKMITIN.SAYS}
+      - FIDO_SENDER_NAME=${FIDO_SENDER_NAME:-TG-Bot}
+      - TELEGRAM_CHANNEL_ID=${TELEGRAM_CHANNEL_ID:-}
+      - FIDOCONFIG=/etc/husky
+    user: "fido"
+
+volumes:
+  binkd_config:
+  husky_config:
+  ftn_spool:
+  fidian_logs:
