@@ -1,7 +1,9 @@
 FROM stimpy23/fidian:latest
 
+# docker CLI to run hpt in fido container (which has proper Husky config)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
+    docker.io \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

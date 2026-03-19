@@ -78,15 +78,15 @@ services:
     depends_on:
       - fido
     volumes:
-      - husky_config:/etc/husky:ro
+      - /var/run/docker.sock:/var/run/docker.sock
       - ftn_spool:/var/spool/ftn
       - posts_posted:/posts/posted
     environment:
       - FIDO_ECHO_AREA=${FIDO_ECHO_AREA:-NICKMITIN.SAYS}
       - FIDO_SENDER_NAME=${FIDO_SENDER_NAME:-MD-Poster}
-      - FIDOCONFIG=/etc/husky
+      - FIDO_CONTAINER=fido-echo
       - POSTS_DIR=/posts
-    user: "fido"
+    user: "root"
 
 volumes:
   binkd_config:
