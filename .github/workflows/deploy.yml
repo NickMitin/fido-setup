@@ -1,4 +1,4 @@
-name: Deploy to fido.nickmitn.ru
+name: Deploy to fido.nickmitin.ru
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
 
       - name: Set domain name
         id: set_domain_name
-        run: echo DOMAIN_NAME="fido.nickmitn.ru" >> $GITHUB_ENV
+        run: echo DOMAIN_NAME="fido.nickmitin.ru" >> $GITHUB_ENV
 
       - name: Set env file name
         id: set_env_file_name

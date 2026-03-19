@@ -1,13 +1,13 @@
-# Deploy to fido.nickmitn.ru
+# Deploy to fido.nickmitin.ru
 
 Deployment is automated via GitHub Actions on push to `main`.
 
 ## Prerequisites
 
 ### Server setup
-1. Create directory on server: `~/fido.nickmitn.ru/`
+1. Create directory on server: `~/fido.nickmitin.ru/`
 2. Ensure Docker and Docker Compose are installed
-3. Create SSH user (typically same as domain: `fido.nickmitn.ru`) with access to Docker
+3. Create SSH user (typically same as domain: `fido.nickmitin.ru`) with access to Docker
 
 ### GitHub secrets
 Configure in repository: **Settings → Secrets and variables → Actions**
@@ -31,6 +31,6 @@ If using GHCR, image will be `ghcr.io/YOUR_ORG/fido-setup-telegram-bot:main`.
 ### First-time server setup
 On the server, log in and run:
 ```bash
-mkdir -p ~/fido.nickmitn.ru
+mkdir -p ~/fido.nickmitin.ru
 # Ensure Docker can access your registry (docker login)
 ```
