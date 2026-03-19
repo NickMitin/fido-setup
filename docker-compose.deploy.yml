@@ -72,6 +72,7 @@ services:
     depends_on:
       - fido
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ftn_spool:/var/spool/ftn
       - posts_posted:/posts/posted
     environment:
