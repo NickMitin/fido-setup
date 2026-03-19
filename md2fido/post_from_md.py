@@ -20,6 +20,8 @@ POSTED_DIR = POSTS_DIR / "posted"
 FIDO_ECHO_AREA = os.environ.get("FIDO_ECHO_AREA", "NICKMITIN.SAYS")
 FIDO_SENDER_NAME = os.environ.get("FIDO_SENDER_NAME", "MD-Poster")
 FIDO_CONTAINER = os.environ.get("FIDO_CONTAINER", "fido-echo")
+# FidoNet Russian standard: CP866. Set to "utf-8" to skip conversion.
+FIDO_CHARSET = os.environ.get("FIDO_CHARSET", "cp866")
 # Shared with fido container via ftn_spool volume
 PENDING_DIR = Path("/var/spool/ftn/.md2fido_pending")
 
@@ -28,17 +30,24 @@ def post_to_fido(subject: str, body: str) -> bool:
     """Run hpt post inside fido container (has proper Husky config)."""
     if not body or not body.strip():
         return False
+    charset = FIDO_CHARSET.lower()
+    encode_body = charset != "utf-8"
     try:
         PENDING_DIR.mkdir(parents=True, exist_ok=True)
         tmp_name = f"post_{uuid.uuid4().hex[:8]}.txt"
         tmp_path = PENDING_DIR / tmp_name
-        tmp_path.write_text(body, encoding="utf-8")
+        if encode_body:
+            tmp_path.write_bytes(body.encode(charset, errors="replace"))
+            subject_arg = subject.encode(charset, errors="replace")
+        else:
+            tmp_path.write_text(body, encoding="utf-8")
+            subject_arg = subject
         try:
             # hpt must run in fido container where fidoconfig/husky is set up
             cmd = [
                 "docker", "exec", FIDO_CONTAINER,
                 "hpt", "post",
-                "-s", subject[:72],
+                "-s", subject_arg[:72] if isinstance(subject_arg, str) else subject_arg[:72],
                 "-e", FIDO_ECHO_AREA,
                 "-nf", FIDO_SENDER_NAME,
                 "-z", f"From MD file at {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
