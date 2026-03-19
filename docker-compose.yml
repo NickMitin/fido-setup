@@ -15,7 +15,7 @@ services:
       - husky_config:/etc/husky
       - ftn_spool:/var/spool/ftn
       - fidian_logs:/var/log/fidian
-    command: ["/bin/sh", "-c", "mkdir -p /var/log/husky /var/log/binkd && chown -R fido:ftn /var/log/husky /var/log/binkd /var/spool/ftn && chmod -R 775 /var/log/husky /var/log/binkd /var/spool/ftn && /usr/bin/supervisord -n -j /run/supervisord.pid -c /etc/supervisor/supervisord.conf & sleep 5 && supervisorctl start ttyd:ttyd_00 2>/dev/null || true && wait"]
+    command: ["/bin/sh", "-c", "grep -q '${FIDO_ECHO_AREA:-NICKMITIN.SAYS}' /etc/husky/areas 2>/dev/null || echo 'EchoArea ${FIDO_ECHO_AREA:-NICKMITIN.SAYS} /var/spool/ftn/msgbase/fido/${FIDO_ECHO_AREA:-NICKMITIN.SAYS} -a ${YOUR_AKA:-2:5023/24.4421} -b Jam ${UPLINK_AKA:-2:5023/24}' >> /etc/husky/areas; mkdir -p /var/spool/ftn/msgbase/fido/${FIDO_ECHO_AREA:-NICKMITIN.SAYS} && chown -R fido:ftn /var/spool/ftn/msgbase/fido 2>/dev/null; mkdir -p /var/log/husky /var/log/binkd && chown -R fido:ftn /var/log/husky /var/log/binkd /var/spool/ftn && chmod -R 775 /var/log/husky /var/log/binkd /var/spool/ftn && /usr/bin/supervisord -n -j /run/supervisord.pid -c /etc/supervisor/supervisord.conf & sleep 5 && supervisorctl start ttyd:ttyd_00 2>/dev/null || true && wait"]
     environment:
       - LINK_NAME=${LINK_NAME:-FidoNet}
       - LINK_DOMAIN=${LINK_DOMAIN:-fidonet}
@@ -46,6 +46,7 @@ services:
       - WEB_PASSWORD=${WEB_PASSWORD:-fidian}
       - ENABLE_TTYD=${ENABLE_TTYD:-1}
       - TZ=${TZ:-UTC}
+      - FIDO_ECHO_AREA=${FIDO_ECHO_AREA:-NICKMITIN.SAYS}
     # If env vars are unset, interactive config wizard runs on first login
 
   telegram-bot:
